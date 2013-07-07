@@ -33,3 +33,15 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Data files
+*.fits
+*.csv
+*.dat
+
+#Output files
+*.eps
+*.png
+
+#Temporary emacs files
+*~
