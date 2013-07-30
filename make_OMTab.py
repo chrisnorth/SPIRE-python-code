@@ -20,11 +20,14 @@ filein_area=file_pathin+'beamarea'+file_suff+'.csv'
 fileout_Kc=file_pathout+'Kc_alpha_OM.csv'
 fileout_area=file_pathout+'beamarea_alpha_OM.csv'
 fileout_arearel=file_pathout+'beamarea-rel_alpha_OM.csv'
+fileout_beamcorr=file_pathout+'beamcorr_alpha_OM.csv'
 filetex_Kc=file_pathout+'Kc_alpha_OM.tex'
 filetex_area=file_pathout+'beamarea_alpha_OM.tex'
 filetex_arearel=file_pathout+'beamarea-rel_alpha_OM.tex'
+filetex_beamcorr=file_pathout+'beamcorr_alpha_OM.tex'
 filetwiki_Kc=file_pathout+'Kc_alpha_OM_twiki.dat'
 filetwiki_arearel=file_pathout+'beamarea-rel_alpha_OM_twiki.dat'
+filetwiki_beamcorr=file_pathout+'beamcorr_alpha_OM_twiki.dat'
 
 ##read beam area
 fareain=reader(open(filein_area))
@@ -32,6 +35,7 @@ alpha=[]
 area_arcsec=[]
 area_sr=[]
 area_rel=[]
+beam_corr=[]
 for row in fareain:
     if string.find(row[0],'#')<0:
         print row
@@ -44,6 +48,7 @@ for row in fareain:
 
 for a in range(len(alpha)):
     area_rel.append(array([area_arcsec[a][0]/area_pip_arcsec[0],area_arcsec[a][1]/area_pip_arcsec[1],area_arcsec[a][2]/area_pip_arcsec[2]]))
+    beam_corr.append(array([area_pip_arcsec[0]/area_arcsec[a][0],area_pip_arcsec[1]/area_arcsec[a][1],area_pip_arcsec[2]/area_arcsec[a][2]]))
 
 #print area_rel
 #print area_pip_arcsec 
@@ -84,13 +89,16 @@ print nalph
 fKcout=open(fileout_Kc,'w')
 fareaout=open(fileout_area,'w')
 farearelout=open(fileout_arearel,'w')
+fbeamcorrout=open(fileout_beamcorr,'w')
 
 fKctex=open(filetex_Kc,'w')
 fareatex=open(filetex_area,'w')
 fareareltex=open(filetex_arearel,'w')
+fbeamcorrtex=open(filetex_beamcorr,'w')
 
 fKctwiki=open(filetwiki_Kc,'w')
 fareareltwiki=open(filetwiki_arearel,'w')
+fbeamcorrtwiki=open(filetwiki_beamcorr,'w')
 
 
 #write headers (csv files)
@@ -118,12 +126,18 @@ line1='\\begin{tabular}{c|lll|}\n'
 line2=' & \\multicolumn{3}{c|}{Relative beam solid angle \\\\\n'
 fareareltex.write(line1+line2+line3+line4)
 
+##change for beam-corr;
+line1='\\begin{tabular}{c|lll|}\n'
+line2=' & \\multicolumn{3}{c|}{Beam correction factor \\\\\n'
+fbeamcorrtex.write(line1+line2+line3+line4)
+
 #write headers (twiki files)
 line1='| | psrc | psrc | psrc | extd | extd | extd |\n'
 line2='| alpha | PSW | PMW | PLW | PSW | PMW | PLW |\n'
 fKctwiki.write(line1+line2)
 line1='| alpha | PSW | PMW | PLW |\n'
 fareareltwiki.write(line1)
+fbeamcorrtwiki.write(line1)
 
 for a in range(nalph):
 
@@ -146,6 +160,15 @@ for a in range(nalph):
     fareareltex.write(line)
     line='| %.1f | %.4f | %.4f | %.4f |\n'%(alpha[a],area_rel[a][0],area_rel[a][1],area_rel[a][2])
     fareareltwiki.write(line)
+
+    #beam corr    
+    line='%.1f , %.4f , %.4f , %.4f \n'%(alpha[a],beam_corr[a][0],beam_corr[a][1],beam_corr[a][2])
+    fbeamcorrout.write(line)    
+    line='%.1f & %.4f & %.4f & %.4f \\\\ \n'%(alpha[a],beam_corr[a][0],beam_corr[a][1],beam_corr[a][2])
+    fbeamcorrtex.write(line)
+    line='| %.1f | %.4f | %.4f | %.4f |\n'%(alpha[a],beam_corr[a][0],beam_corr[a][1],beam_corr[a][2])
+    fbeamcorrtwiki.write(line)
+    
     
 line='\\end{tabular}\n'
 fKctex.write(line)
@@ -154,11 +177,14 @@ fareatex.write(line)
 fKcout.close()
 fareaout.close()
 farearelout.close()
+fbeamcorrout.close()
 fKctex.close()
 fareatex.close()
 fareareltex.close()
+fbeamcorrtex.close()
 fKctwiki.close()
 fareareltwiki.close()
+fbeamcorrtwiki.close()
 
 ######################################################################
 ######   MAKE GREY BODY TABLES
@@ -180,18 +206,21 @@ filein_area_t2=file_pathin+'beamarea'+file_sufft2+'.csv'
 fileout_KcP_t=file_pathout+'KcP_temp_OM.csv'
 fileout_KcE_t=file_pathout+'KcE_temp_OM.csv'
 fileout_arearel_t=file_pathout+'beamarea-rel_temp_OM.csv'
+fileout_beamcorr_t=file_pathout+'beamcorr_temp_OM.csv'
 fileout_area_t1=file_pathout+'beamarea_temp_beta%.1f_OM.csv'%beta1
 fileout_area_t2=file_pathout+'beamarea_temp_beta%.1f_OM.csv'%beta2
 filetex_KcP_t=file_pathout+'KcP_temp_OM.tex'
 filetex_KcE_t=file_pathout+'KcE_temp_OM.tex'
 filetex_area_t=file_pathout+'beamarea_temp_OM.tex'
 filetex_arearel_t=file_pathout+'beamarea-rel_temp_OM.tex'
+filetex_beamcorr_t=file_pathout+'beamcorr_temp_OM.tex'
 filetex_area_t1=file_pathout+'beamarea_temp_beta%.1f_OM.tex'%beta1
 filetex_area_t2=file_pathout+'beamarea_temp_beta%.1f_OM.tex'%beta2
 
 filetwiki_KcP_t=file_pathout+'KcP_temp_OM_twiki.dat'
 filetwiki_KcE_t=file_pathout+'KcE_temp_OM_twiki.dat'
 filetwiki_arearel_t=file_pathout+'beamarea-rel_temp_OM_twiki.dat'
+filetwiki_beamcorr_t=file_pathout+'beamcorr_temp_OM_twiki.dat'
 
 ##read beam area (beta1)
 fareain_t1=reader(open(filein_area_t1))
@@ -199,6 +228,7 @@ temp=[]
 area_arcsec_t1=[]
 area_sr_t1=[]
 area_rel_t1=[]
+beam_corr_t1=[]
 for row in fareain_t1:
     if string.find(row[0],'#')<0:
         #print row
@@ -207,12 +237,14 @@ for row in fareain_t1:
         area_arcsec_t1.append(areas)
         area_rel_t1.append(areas/area_pip_arcsec)
         area_sr_t1.append(arcsec2sr(areas)*1.e8)
+        beam_corr_t1.append(area_pip_arcsec/areas)
         
 ##read beam area (beta2)
 fareain_t2=reader(open(filein_area_t2))
 area_arcsec_t2=[]
 area_sr_t2=[]
 area_rel_t2=[]
+beam_corr_t2=[]
 for row in fareain_t2:
     if string.find(row[0],'#')<0:
         print row
@@ -221,6 +253,7 @@ for row in fareain_t2:
         area_arcsec_t2.append(areas)
         area_rel_t2.append(areas/area_pip_arcsec)
         area_sr_t2.append(arcsec2sr(areas)*1.e8)
+        beam_corr_t2.append(area_pip_arcsec/areas)
 
 ##read KcolP (beta1)
 fKcin_t1=reader(open(filein_Kc_t1))
@@ -293,16 +326,19 @@ fKcEout_t=open(fileout_KcE_t,'w')
 fareaout_t1=open(fileout_area_t1,'w')
 fareaout_t2=open(fileout_area_t2,'w')
 farearelout_t=open(fileout_arearel_t,'w')
+fbeamcorrout_t=open(fileout_beamcorr_t,'w')
 
 fKcPtex_t=open(filetex_KcP_t,'w')
 fKcEtex_t=open(filetex_KcE_t,'w')
 fareareltex_t=open(filetex_arearel_t,'w')
+fbeamcorrtex_t=open(filetex_beamcorr_t,'w')
 fareatex_t1=open(filetex_area_t1,'w')
 fareatex_t2=open(filetex_area_t2,'w')
 
 fKcPtwiki_t=open(filetwiki_KcP_t,'w')
 fKcEtwiki_t=open(filetwiki_KcE_t,'w')
 fareareltwiki_t=open(filetwiki_arearel_t,'w')
+fbeamcorrtwiki_t=open(filetwiki_beamcorr_t,'w')
 
 #write headers (csv files)
 line1='#Beta: , %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n'%(beta1,beta1,beta1,beta2,beta2,beta2)
@@ -327,6 +363,7 @@ fareatex_t2.write(line1+line2+line3+line4)
 line2=' & \\multicolumn{3}{c|}{$\beta = %.1f$} & \\multicolumn{3}{c|}{$\beta = %1.f$} \\\\\n'%(beta1,beta2)
 line3='$\Temp (K)$ & PSW & PMW & PLW & PSW & PMw & PLW \\\\\n'
 fareareltex_t.write(line1+line2+line3+line4)
+fbeamcorrtex_t.write(line1+line2+line3+line4)
 
 #write headers (twiki files)
 line1='| Beta > | %.1f | %.1f | %.1f | %.1f | %.1f | %.1f |\n'%(beta1,beta1,beta1,beta2,beta2,beta2)
@@ -358,12 +395,16 @@ for t in range(ntemp):
         #area file
         line='%.1f , %.4f , %.4f , %.4f , %.4f , %.4f , %.4f \n'%(temp[t],area_rel_t1[t][0],area_rel_t1[t][1],area_rel_t1[t][2],area_rel_t2[t][0],area_rel_t2[t][1],area_rel_t2[t][2])
         farearelout_t.write(line)    
+        line='%.1f , %.4f , %.4f , %.4f , %.4f , %.4f , %.4f \n'%(temp[t],beam_corr_t1[t][0],beam_corr_t1[t][1],beam_corr_t1[t][2],beam_corr_t2[t][0],beam_corr_t2[t][1],beam_corr_t2[t][2])
+        fbeamcorrout_t.write(line)    
         line='%.1f , %d , %d , %d , %.4f , %.4f , %.4f \n'%(temp[t],area_arcsec_t1[t][0],area_arcsec_t1[t][1],area_arcsec_t1[t][2],area_sr_t1[t][0],area_sr_t1[t][1],area_sr_t1[t][2])
         fareaout_t1.write(line)    
         line='%.1f , %d , %d , %d , %.4f , %.4f , %.4f \n'%(temp[t],area_arcsec_t2[t][0],area_arcsec_t2[t][1],area_arcsec_t2[t][2],area_sr_t2[t][0],area_sr_t2[t][1],area_sr_t2[t][2])
         fareaout_t2.write(line)    
         line='%.1f & %.4f & %.4f & %.4f & %.4f & %.4f & %.4f \\\\ \n'%(temp[t],area_rel_t1[t][0],area_rel_t1[t][1],area_rel_t1[t][2],area_rel_t2[t][0],area_rel_t2[t][1],area_rel_t2[t][2])
         fareareltex_t.write(line)
+        line='%.1f & %.4f & %.4f & %.4f & %.4f & %.4f & %.4f \\\\ \n'%(temp[t],beam_corr_t1[t][0],beam_corr_t1[t][1],beam_corr_t1[t][2],beam_corr_t2[t][0],beam_corr_t2[t][1],beam_corr_t2[t][2])
+        fbeamcorrtex_t.write(line)
         line='%.1f & %d & %d & %d & %.4f & %.4f & %.4f \\\\ \n'%(temp[t],area_arcsec_t1[t][0],area_arcsec_t1[t][1],area_arcsec_t1[t][2],area_sr_t1[t][0],area_sr_t1[t][1],area_sr_t1[t][2])
         fareatex_t1.write(line)
         line='%.1f & %d & %d & %d & %.4f & %.4f & %.4f \\\\ \n'%(temp[t],area_arcsec_t2[t][0],area_arcsec_t2[t][1],area_arcsec_t2[t][2],area_sr_t2[t][0],area_sr_t2[t][1],area_sr_t2[t][2])
@@ -371,6 +412,8 @@ for t in range(ntemp):
 
         line='| %.1f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f |\n'%(temp[t],area_rel_t1[t][0],area_rel_t1[t][1],area_rel_t1[t][2],area_rel_t2[t][0],area_rel_t2[t][1],area_rel_t2[t][2])
         fareareltwiki_t.write(line)
+        line='| %.1f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f |\n'%(temp[t],beam_corr_t1[t][0],beam_corr_t1[t][1],beam_corr_t1[t][2],beam_corr_t2[t][0],beam_corr_t2[t][1],beam_corr_t2[t][2])
+        fbeamcorrtwiki_t.write(line)
 
 line='\\end{tabular}\n'
 fKcPtex_t.write(line)
@@ -382,12 +425,15 @@ fKcPout_t.close()
 fKcEout_t.close()
 fareaout_t1.close()
 farearelout_t.close()
+fbeamcorrout.close()
 fareaout_t2.close()
 fKcPtex_t.close()
 fKcEtex_t.close()
 fareareltex_t.close()
+fbeamcorrtex.close()
 fareatex_t1.close()
 fareatex_t2.close()
 fKcPtwiki_t.close()
 fKcEtwiki_t.close()
 fareareltwiki_t.close()
+fbeamcorrtwiki_t.close()

@@ -2694,9 +2694,9 @@ def plotblim(radarr,beam_scl_lim,beam_cmb_lim,beam_fix,brad,fsuff,fignum,figlab)
     plot.clf()
     tit=[r'PSW',r'PMW',r'PLW']
     
-    plot.plot(radarr,beam_cmb_lim[:,0,0],'k--',label=r'High-freq. edge')
+    plot.plot(radarr,beam_cmb_lim[:,0,0],'k--',label=r'Low-freq. edge')
     plot.plot(radarr,beam_cmb_lim[:,1,0],'k-',label=r'Band centre')
-    plot.plot(radarr,beam_cmb_lim[:,2,0],'k:',label=r'Low-freq. edge')
+    plot.plot(radarr,beam_cmb_lim[:,2,0],'k:',label=r'High-freq. edge')
 
     plot.yscale('log')
     plot.ylim(1.e-6,1)

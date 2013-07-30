@@ -817,6 +817,51 @@ def measbeam_new(radarr,beam_scl,beam_fix,nuarr,rsrfarr,nu0,alpha,ind=1.0,brad=N
 
     return(areameas)            
 
+def measbeam_new_wrong(radarr,beam_scl,beam_fix,nuarr,rsrfarr,nu0,alpha,ind=1.0,brad=None):
+
+    ## Calculate the measured beam area over source of spectral index alpha
+    ## based on given effective frequency and Neptune spectral index
+    ## sing the scaled and fixed beams
+
+    from numpy import zeros,arange,pi,max
+    import scipy
+    import scipy.interpolate as interp
+    import scipy.integrate as integrate
+    
+    nrad=radarr.size
+    nnu=nuarr.size
+    beammeas=zeros(nrad)
+    beam_scl_nu=zeros(nnu)
+    beam_fix_nu=zeros(nnu)
+    
+    beam_scl_int=interp.interp1d(radarr,beam_scl)
+    beam_fix_int=interp.interp1d(radarr,beam_fix)
+    denom_arg = rsrfarr * nuarr**alpha
+    for r in arange(nrad):
+        ##integrate over the band
+        #################### THIS STEP IS DELIBERATELY WRONG ###############
+        r_nu=radarr[r]/(nuarr/nu0)**ind ##effective radius over the frequency range
+        ####################################################################
+        inr=scipy.where(r_nu < max(radarr))
+        outr=scipy.where(r_nu >= max(radarr))
+        beam_scl_nu[inr]=beam_scl_int(r_nu[inr])
+        beam_scl_nu[outr]=0.
+        beam_fix_nu[inr]=beam_fix_int(r_nu[inr])
+        beam_fix_nu[outr]=0.
+        
+        ##add on fixed beam
+        beam_cmb_nu=scipy.where(beam_scl_nu > beam_fix[r],beam_scl_nu,beam_fix[r])
+        num_arg = rsrfarr * nuarr**alpha * beam_cmb_nu
+        beammeas[r]=integrate.trapz(num_arg,nuarr)/integrate.trapz(denom_arg,nuarr)
+    
+    if brad==None:
+        brad=max(radarr)
+    beammeas_int=scipy.where(radarr <= brad,beammeas,0.)
+    #calculate beam area
+    areameas=integrate.trapz(beammeas_int*2.*pi*radarr,radarr)
+
+    return(areameas)            
+
 def measbeam_simple(area_nu0,nuarr,rsrfarr,nuc,alpha,ind=0.85):
     
     import scipy.integrate as integrate
@@ -1019,8 +1064,10 @@ def get_effnu_az_newbeam(radarr,beam_scl,beam_fix,rsrfarr,nuarr,nuc,brad,alpha_n
     ## Takes constant and core sections of beam
     
     from numpy import array,zeros,arange    
-    from beam import measbeam_new,beamarea_az
-
+    from beam import beamarea_az
+    #from beam import measbeam_new_wrong as measbeam_new
+    #print "**USING INCORRECT BEAM SCALING**"
+    from beam import measbeam_new
     band=arange(3)
     beam_cmb=zeros((brad,3))
     area=zeros(3)

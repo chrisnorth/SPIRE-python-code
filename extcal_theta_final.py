@@ -22,8 +22,8 @@ from calc_conv import calc_k4,calc_kc,calc_k5,calc_k4pip,calc_kcpip
 
 def maincode():
     parser=argparse.ArgumentParser(description='Herschel-SPIRE Extended Emission Calibration')
-    parser.add_argument('--brad',action='store',default=350.,type=float,dest='brad',help='Radius to integrate beam out to (arcsec). Default=350')
-    parser.add_argument('--ind',action='store',default=0.65,type=float,dest='ind',help='Power law index with which beam FWHM changes with frequency (FWHM \\propto \\nu^{ind}). Default=0.65')
+    parser.add_argument('--brad',action='store',default=600.,type=float,dest='brad',help='Radius to integrate beam out to (arcsec). Default=350')
+    parser.add_argument('--ind',action='store',default=0.85,type=float,dest='ind',help='Power law index with which beam FWHM changes with frequency (FWHM \\propto \\nu^{ind}). Default=0.65')
     parser.add_argument('--bzlim',action='store',default=None,type=float,dest='bzlim',help='Zero-limit for beamfiles, below which the values are replaced by BZVAL. Default=None (i.e. don\'t set limit)')
     parser.add_argument('--bzval',action='store',default=0.,type=float,dest='bzval',help='Value with which to replace beam values below the zero-limit (BZLIM). Default=0')
     parser.add_argument('--aunit',action='store',default="sr",dest='aunit',help='Unit of area to use for area plots [arcsec|sr]. Default=sr')
@@ -32,6 +32,7 @@ def maincode():
     parser.add_argument('--apeff', action='store',default='R',dest='apftype',help='Aperture Efficiency type to use [R=Real | U=Uniform]')
     parser.add_argument('--nepmod', action='store',default='ESA4',dest='nepmod',help='Model to use for Neptune spectrum ["ESA2"|"ESA4"]')
     parser.add_argument('--oldpip', action='store_true',default=False,dest='oldpip',help='Set to use the old system for the pipeline (no ap-eff etc.)')
+    parser.add_argument('--testonly', action='store_true',default=False,dest='testonly',help='Set to not output to normal files')
 
     parser.add_argument('--prsrf', action='store_true',default=False,dest='prsrf',help='Set to plot RSRF and Ap. Eff.')
     parser.add_argument('--pblim', action='store_true',default=False,dest='pblim',help='Set to plot beam profiles at band limits')
@@ -57,6 +58,7 @@ def maincode():
     apftype=args.apftype
     nepmod=args.nepmod
     oldpip=args.oldpip
+    testonly=args.testonly
     
     if pall:
         prsrf=True
@@ -98,6 +100,9 @@ def maincode():
         fsuff=fsuff+'_newArea'
     if oldpip==True:
         fsuff=fsuff+'_oldPip'
+    
+    if testonly:
+        fsuff='_TEST-ONLY_'
     print 'File_suffix= '+fsuff
 
     file_summ='../Outputs/Summ'+fsuff+'.dat'
@@ -427,7 +432,7 @@ def maincode():
     fsumm.write(lsum)
     lsum='Effective/nominal frequencies: %.5f, %.5f, %.5f \n'%(nueff[0]/nuc[0], nueff[1]/nuc[1],nueff[2]/nuc[2])
     fsumm.write(lsum)
-    
+    sys.exit()
     ### thetarr is in FWHM
     thetarr=concatenate(([1.e-8],arange(1.,10.,0.2)*1.e-3, \
                         arange(1.,10.,0.2)*1.e-2, \
