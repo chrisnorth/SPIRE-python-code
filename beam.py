@@ -5,7 +5,7 @@ def getbeam(beamtype,band,bpix,bwid,bzlim=None,bzval=0.,verbose=None):
     
     import sys
     from numpy import zeros,array,arange,sqrt,exp,log,pi,min,max,floor
-    import pyfits
+    import astropy.io.fits as pyfits
     from scipy import where
     import scipy as sci
     import scipy.interpolate as interp
@@ -349,7 +349,7 @@ def getbeammaps(src='Nep',regrid=None):
 
     from numpy import array,zeros,zeros_like,mean,max
     from scipy import where
-    import pyfits
+    import astropy.io.fits as pyfits
     
     crpix=[[0,0],[0,0],[0,0]]
     if src=='Nep':
@@ -457,7 +457,7 @@ def getbeammaps_theory(regrid=None,maxxy=999):
 
     from numpy import array,zeros,zeros_like,mean,max
     from scipy import where
-    import pyfits
+    import astropy.io.fits as pyfits
     
     fitsfiles=['../Inputs/spire_beams_theoretical/spire_psw_flight_psf.fits', \
             '../Inputs/spire_beams_theoretical/spire_pmw_flight_psf.fits', \
@@ -817,6 +817,43 @@ def measbeam_new(radarr,beam_scl,beam_fix,nuarr,rsrfarr,nu0,alpha,ind=1.0,brad=N
 
     return(areameas)            
 
+def effbeam(radarr,beam_scl,beam_fix,nuarr,rsrfarr,nu0,alpha,ind=1.0,brad=None):
+
+    ## Calculate the effective beam profile for a source of spectral index alpha
+    ## based on given effective frequency
+    ## sing the scaled and fixed beams
+
+    from numpy import zeros,arange,pi,max
+    import scipy
+    import scipy.interpolate as interp
+    import scipy.integrate as integrate
+    
+    nrad=radarr.size
+    nnu=nuarr.size
+    beammeas=zeros(nrad)
+    beam_scl_nu=zeros(nnu)
+    #beam_fix_nu=zeros(nnu)
+    
+    beam_scl_int=interp.interp1d(radarr,beam_scl)
+    #beam_fix_int=interp.interp1d(radarr,beam_fix)
+    denom_arg = rsrfarr * nuarr**alpha
+    for r in arange(nrad):
+        ##integrate over the band
+        r_nu=radarr[r]*(nuarr/nu0)**ind ##effective radius over the frequency range
+        inr=scipy.where(r_nu < max(radarr))
+        outr=scipy.where(r_nu >= max(radarr))
+        beam_scl_nu[inr]=beam_scl_int(r_nu[inr])
+        beam_scl_nu[outr]=0.
+        #beam_fix_nu[inr]=beam_fix_int(r_nu[inr])
+        #beam_fix_nu[outr]=0.
+        
+        ##add on fixed beam
+        beam_cmb_nu=scipy.where(beam_scl_nu > beam_fix[r],beam_scl_nu,beam_fix[r])
+        num_arg = rsrfarr * nuarr**alpha * beam_cmb_nu
+        beammeas[r]=integrate.trapz(num_arg,nuarr)/integrate.trapz(denom_arg,nuarr)
+
+    return(beammeas)       
+
 def measbeam_new_wrong(radarr,beam_scl,beam_fix,nuarr,rsrfarr,nu0,alpha,ind=1.0,brad=None):
 
     ## Calculate the measured beam area over source of spectral index alpha
@@ -1080,6 +1117,86 @@ def get_effnu_az_newbeam(radarr,beam_scl,beam_fix,rsrfarr,nuarr,nuc,brad,alpha_n
     #Spectral index of neptune
     #alpha_nep=array((1.26,1.39,1.45))
 
+    a_init=array([[1.,1.01],[1.,1.02],[1.,1.03]])
+
+    maxit=10.
+    radarr=arange(brad)
+    a_fin=zeros(3)
+    ameas_fin=zeros(3)
+    arel_fin=zeros(3)
+
+    for b in band:
+        if verbose: print 'Band %d'%b
+        a_arr=a_init[b,:]
+        ameas=zeros(2)
+        ameas[0]=measbeam_new(radarr,beam_scl[:,b],beam_fix[:,b],nuarr,rsrfarr[:,b],nuc[b]*a_arr[0],alpha_nep[b],ind=ind)
+        ameas[1]=measbeam_new(radarr,beam_scl[:,b],beam_fix[:,b],nuarr,rsrfarr[:,b],nuc[b]*a_arr[1],alpha_nep[b],ind=ind)
+        adiff=ameas-area[b]
+        arel=(ameas-area[b])/area[b]
+        if verbose:
+            print 'a=%.4f, Area=%.2f (Diff=%.3f ; Rel=%.6f)' % (a_arr[0],ameas[0],adiff[0],arel[0])
+            print 'a=%.4f, Area=%.2f (Diff=%.3f ; Rel=%.6f)' % (a_arr[1],ameas[1],adiff[1],arel[1])
+        it=1
+        done=False
+        while done==False:
+            grad=(adiff[1]-adiff[0])/(a_arr[1]-a_arr[0])
+            a_arrnew=a_arr[1] - adiff[1]/grad
+            a_arr[0]=a_arr[1]
+            ameas[0]=ameas[1]
+            a_arr[1]=a_arrnew
+            ameas[1]=measbeam_new(radarr,beam_scl[:,b],beam_fix[:,b],nuarr,rsrfarr[:,b],nuc[b]*a_arr[1],alpha_nep[b],ind=ind)
+            adiff=ameas-area[b]        
+            arel=(ameas-area[b])/area[b]
+            if verbose:            
+                print 'a=%.4f, Area=%.2f (Diff=%.3f ; Rel=%.6f)' % (a_arr[1],ameas[1],adiff[1],arel[1])
+            it=it+1
+            if abs(arel[1]) < aprec:
+                done=True
+            elif it >= maxit:
+                done=True
+        a_fin[b]=a_arr[1]
+        ameas_fin[b]=ameas[1]
+        arel_fin[b]=arel[1]
+        if verbose:        
+            print 'Final a=%.4f, Area=%.2f (Rel. error=%.6f)' % (a_fin[b],ameas_fin[b],arel_fin[b])
+            print 'Nu(eff)=%.2f GHz'%(nuc[b]*a_fin[b]/1.e9)
+
+    if verbose:
+        print 'Meas areas: [%.2f, %.2f, %.2f]' % (ameas_fin[0],ameas_fin[1],ameas_fin[2])
+        print 'True areas: [%.2f, %.2f, %.2f]' % (area[0],area[1],area[2])
+
+    nueff=nuc*a_fin
+    print 'Effective frequencies: [%.2f, %.2f, %.2f] GHz' % (nueff[0]/1.e9,nueff[1]/1.e9,nueff[2]/1.e9)
+    return(nueff)
+
+def get_effnu_az_newbeam_map(radarr,beam_scl,beam_fix,rsrfarr,nuarr,nuc,brad,alpha_nep,area_map=None,aprec=0.0001,verbose=None,ind=1.0):
+    
+    ## Find the effective frequency of the beam, based on measurements of Neptune
+    ## Takes constant and core sections of beam
+    ## Fixes beam area to the map areas (if supplied)
+    
+    from numpy import array,zeros,arange    
+    from beam import beamarea_az
+    #from beam import measbeam_new_wrong as measbeam_new
+    #print "**USING INCORRECT BEAM SCALING**"
+    from beam import measbeam_new
+    band=arange(3)
+    beam_cmb=zeros((brad,3))
+    
+    if area_map==None:
+        #calculate areas from profile
+        area=zeros(3)
+        for b in band:
+            beam_cmb=comb_beam(beam_scl,beam_fix)
+            area[b]=beamarea_az(radarr,beam_cmb[:,b],brad=brad)
+    else:
+        #use areas provided in area_map
+        area=area_map
+        
+
+    if verbose: print 'Calculated Beam Areas (brad): [%.2f, %.2f, %.2f]' % (area[0],area[1],area[2])
+
+    ##initial values to use
     a_init=array([[1.,1.01],[1.,1.02],[1.,1.03]])
 
     maxit=10.
