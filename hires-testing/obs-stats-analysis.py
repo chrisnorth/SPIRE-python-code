@@ -68,7 +68,7 @@ for p in props:
     props[p]['ids']=obsidType[propName==props[p]['code']]
     props[p]['n']=len(props[p]['ids'])
     props[p]['filter']=np.in1d(obsids, props[p]['ids'])
-    print '%s: %d'%(p,props[p]['n'])
+    print('%s: %d'%(p,props[p]['n']))
 
 exgal_test = logical_or(propType == 'GAL', propType == 'COS')
 gal_test = logical_or(propType == 'STA', propType == 'ISM', propType == 'SOL')
