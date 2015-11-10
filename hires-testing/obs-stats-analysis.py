@@ -408,7 +408,21 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
     ############################################################################
 
     msize=5
-
+    rcParams.update({
+        'axes.titlesize': 'xx-large',
+        'axes.labelsize': 'x-large',
+        'axes.linewidth':2,
+        'legend.fontsize':'x-large',
+        'xtick.labelsize':'x-large',
+        'xtick.major.width':2,
+        'xtick.minor.width':1,
+        'ytick.labelsize':'x-large',
+        'ytick.major.width':2,
+        'ytick.minor.width':1,
+        'legend.markerscale':1,
+        'legend.fontsize':'x-large',
+        'lines.markeredgewidth':1
+    })
     # Plot splits for separate bands
     figure(4,figsize=(10,12))
     clf()
@@ -478,9 +492,9 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
     loglog(psw_99[gal_filter], psw_pix[gal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Galactic', c=colors['gal'])
     loglog(psw_99[other_filter], psw_pix[other_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Other', c=colors['other'])
 
-    xlabel('99th Percentile Signal')
-    ylabel('Pixel Count > %d MJy/sr'%(psw_pix_val))
-    title('PSW')
+    xlabel('99th Percentile Signal',fontsize=20)
+    ylabel('Pixel Count > %d MJy/sr'%(psw_pix_val),fontsize=20)
+    title('PSW',fontsize=20)
     xlim(1,1e5)
     ylim(1,1e7)
     annotate('%d pixels'%(psw_pix_th),[xlim()[1]/1.2,psw_pix_th*1.2],ha='right',color=colors['threshold'],fontweight='bold')
