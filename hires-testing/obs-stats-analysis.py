@@ -1,4 +1,4 @@
-from pylab import *
+from matplotlib.pylab import *
 from astropy.table import Table
 ion()
 data = Table.read('stats/Results-floats2.csv',format='ascii.csv')
@@ -220,7 +220,7 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
         'ytick.labelsize':'large',
         'ytick.major.width':2,
         'ytick.minor.width':1,
-        'legend.markerscale':2,
+        'legend.markerscale':1,
         'lines.markeredgewidth':1
     })
 
@@ -233,6 +233,10 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
         'passed_out':(0.5,0.5,0.5,0),'passed_in':'w',
         'mec':'None',
         'threshold':(0.5,0.5,0.5)}
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
 
     figure(1,figsize=(10,12))
     clf()
@@ -256,6 +260,8 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
     legend(loc='lower right', frameon=False, numpoints=1)
     savefig('doc/stats-both-thresholds-2-psw.pdf')
 
+    ############################################################################
+    ############################################################################
     ############################################################################
 
     figure(2,figsize=(16,7))
@@ -322,9 +328,11 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
     annotate('%d MJy/sr'%(psw_99_th),[psw_99_th*1.2,ylim()[1]/1.2],va='top',color=colors['threshold'],rotation=90,fontweight='bold')
     legend(loc='lower right', frameon=False, numpoints=1)
 
-    tight_layout()
+    #tight_layout()
     savefig('doc/snr-thresholds-2.pdf')
 
+    ############################################################################
+    ############################################################################
     ############################################################################
 
     # Plot same but for different split
@@ -392,8 +400,96 @@ def do_plots(filt_psw=None,filt_pmw=None,filt_plw=None):
     annotate('%d MJy/sr'%(psw_99_th),[psw_99_th*1.2,ylim()[1]/1.2],va='top',color=colors['threshold'],rotation=90,fontweight='bold')
     legend(loc='lower right', frameon=False, numpoints=1)
 
-    tight_layout()
+    #tight_layout()
     savefig('doc/snr-thresholds-byobstype-2.pdf')
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+
+    msize=5
+
+    # Plot splits for separate bands
+    figure(4,figsize=(10,12))
+    clf()
+
+    axhline(plw_pix_th, color=colors['threshold'], lw=2, ls='--')
+    axvline(plw_99_th, color=colors['threshold'], lw=2, ls='--')
+
+    #loglog(plw_99[filt_plw], plw_pix[filt_plw], 'o', markersize=msize, label='Passed', mec=colors['passed_out'],mfc=colors['passed_in'])
+    #loglog(plw_99[filt_plw], plw_pix[filt_plw], 'o', markersize=msize*2, mec=colors['passed_out'],mfc=colors['passed_in'])
+
+    loglog(plw_99[exgal_filter], plw_pix[exgal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Exgalactic', c=colors['exgal'])
+    loglog(plw_99[gal_filter], plw_pix[gal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Galactic', c=colors['gal'])
+    loglog(plw_99[other_filter], plw_pix[other_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Other', c=colors['other'])
+
+    xlabel('99th Percentile Signal')
+    ylabel('Pixel Count > %d MJy/sr'%(plw_pix_val))
+    title('PLW')
+
+    xlim(1,1e4)
+    ylim(1,1e7)
+    annotate('%d pixels'%(plw_pix_th),[xlim()[1]/1.2,plw_pix_th*1.2],ha='right',color=colors['threshold'],fontweight='bold')
+    annotate('%d MJy/sr'%(plw_99_th),[plw_99_th*1.2,ylim()[1]/1.2],va='top',color=colors['threshold'],rotation=90,fontweight='bold')
+    legend(loc='lower right', frameon=False, numpoints=1)
+
+    savefig('doc/snr-thresholds-byobstype-PLW.pdf')
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+
+    figure(5,figsize=(10,12))
+    clf()
+    axhline(pmw_pix_th, color=colors['threshold'], lw=2, ls='--')
+    axvline(pmw_99_th, color=colors['threshold'], lw=2, ls='--')
+
+    #loglog(pmw_99[filt_pmw], pmw_pix[filt_pmw], 'o', markersize=msize, label='Passed', mec=colors['passed_out'],mfc=colors['passed_in'])
+    #loglog(pmw_99[filt_pmw], pmw_pix[filt_pmw], 'o', markersize=msize*2, mec=colors['passed_out'],mfc=colors['passed_in'])
+
+    loglog(pmw_99[exgal_filter], pmw_pix[exgal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Extragalactic', c=colors['exgal'])
+    loglog(pmw_99[gal_filter], pmw_pix[gal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Galactic', c=colors['gal'])
+    loglog(pmw_99[other_filter], pmw_pix[other_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Other', c=colors['other'])
+
+    xlabel('99th Percentile Signal [MJy/sr]')
+    ylabel('Pixel Count > %d MJy/sr'%(pmw_pix_val))
+    title('PMW')
+    xlim(1,1e5)
+    ylim(1,1e7)
+
+    annotate('%d pixels'%(pmw_pix_th),[xlim()[1]/1.2,pmw_pix_th*1.2],ha='right',color=colors['threshold'],fontweight='bold')
+    annotate('%d MJy/sr'%(pmw_99_th),[pmw_99_th*1.2,ylim()[1]/1.2],va='top',color=colors['threshold'],rotation=90,fontweight='bold')
+    legend(loc='lower right', frameon=False, numpoints=1)
+
+    savefig('doc/snr-thresholds-byobstype-PMW.pdf')
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+
+    figure(6,figsize=(10,12))
+    clf()
+    axhline(psw_pix_th, color=colors['threshold'], lw=2, ls='--')
+    axvline(psw_99_th, color=colors['threshold'], lw=2, ls='--')
+    #loglog(psw_99[filt_psw], psw_pix[filt_psw], 'o', markersize=msize, label='Passed', mec=colors['passed_out'],mfc=colors['passed_in'])
+    #loglog(psw_99[filt_psw], psw_pix[filt_psw], 'o', markersize=msize*2, mec=colors['passed_out'],mfc=colors['passed_in'])
+
+    loglog(psw_99[exgal_filter], psw_pix[exgal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Extragalactic', c=colors['exgal'])
+    loglog(psw_99[gal_filter], psw_pix[gal_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Galactic', c=colors['gal'])
+    loglog(psw_99[other_filter], psw_pix[other_filter], mstyle, mec=colors['mec'] , markersize=msize, label='Other', c=colors['other'])
+
+    xlabel('99th Percentile Signal')
+    ylabel('Pixel Count > %d MJy/sr'%(psw_pix_val))
+    title('PSW')
+    xlim(1,1e5)
+    ylim(1,1e7)
+    annotate('%d pixels'%(psw_pix_th),[xlim()[1]/1.2,psw_pix_th*1.2],ha='right',color=colors['threshold'],fontweight='bold')
+    annotate('%d MJy/sr'%(psw_99_th),[psw_99_th*1.2,ylim()[1]/1.2],va='top',color=colors['threshold'],rotation=90,fontweight='bold')
+    legend(loc='lower right', frameon=False, numpoints=1)
+
+    #tight_layout()
+    savefig('doc/snr-thresholds-byobstype-PSW.pdf')
+
     show()
 
 if __name__ == '__main__':
